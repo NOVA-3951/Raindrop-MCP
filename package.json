@@ -1,0 +1,34 @@
+{
+  "name": "raindrop-mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for Raindrop.io bookmarking service",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "raindrop-mcp-server": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "raindrop",
+    "bookmarks",
+    "model-context-protocol"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "files": [
+    "build"
+  ]
+}

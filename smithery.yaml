@@ -1,0 +1,7 @@
+parameters:
+  - name: RAINDROP_API_TOKEN
+    description: "Your Raindrop.io API token. Get it from https://app.raindrop.io/settings/integrations after creating an integration."
+    required: true
+
+host: "0.0.0.0"
+port: 3000
