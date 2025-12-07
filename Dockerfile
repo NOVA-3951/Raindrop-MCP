@@ -7,4 +7,6 @@ RUN npm ci --only=production
 
 COPY build ./build
 
+EXPOSE 3000
+
 CMD ["node", "build/index.js"]

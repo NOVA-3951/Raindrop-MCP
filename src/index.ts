@@ -1,40 +1,27 @@
 #!/usr/bin/env node
 
+import express, { Request, Response } from "express";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
+import { randomUUID } from "crypto";
 
 const RAINDROP_API_BASE = "https://api.raindrop.io/rest/v1";
 
 class RaindropMCPServer {
-  private server: Server;
   private apiToken: string;
 
   constructor() {
     this.apiToken = process.env.RAINDROP_API_TOKEN || "";
-    
+
     if (!this.apiToken) {
       console.error("ERROR: RAINDROP_API_TOKEN environment variable is required");
       process.exit(1);
     }
-
-    this.server = new Server(
-      {
-        name: "raindrop-mcp-server",
-        version: "1.0.0",
-      },
-      {
-        capabilities: {
-          tools: {},
-        },
-      }
-    );
-
-    this.setupHandlers();
   }
 
   private async makeRequest(
@@ -71,8 +58,25 @@ class RaindropMCPServer {
     return await response.json();
   }
 
-  private setupHandlers() {
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+  private createServer(): Server {
+    const server = new Server(
+      {
+        name: "raindrop-mcp-server",
+        version: "1.0.0",
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
+
+    this.setupHandlers(server);
+    return server;
+  }
+
+  private setupHandlers(server: Server) {
+    server.setRequestHandler(ListToolsRequestSchema, async () => {
       const tools: Tool[] = [
         {
           name: "get_user",
@@ -400,7 +404,7 @@ class RaindropMCPServer {
       return { tools };
     });
 
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    server.setRequestHandler(CallToolRequestSchema, async (request) => {
       try {
         const { name, arguments: args } = request.params;
 
@@ -452,7 +456,7 @@ class RaindropMCPServer {
               content: [
                 {
                   type: "text",
-                  text: `✓ Bookmark created successfully!\n\n${JSON.stringify(
+                  text: `Bookmark created successfully!\n\n${JSON.stringify(
                     data,
                     null,
                     2
@@ -490,7 +494,7 @@ class RaindropMCPServer {
               content: [
                 {
                   type: "text",
-                  text: `✓ Bookmark updated successfully!\n\n${JSON.stringify(
+                  text: `Bookmark updated successfully!\n\n${JSON.stringify(
                     data,
                     null,
                     2
@@ -507,7 +511,7 @@ class RaindropMCPServer {
               content: [
                 {
                   type: "text",
-                  text: `✓ Bookmark ${id} deleted successfully (moved to Trash)`,
+                  text: `Bookmark ${id} deleted successfully (moved to Trash)`,
                 },
               ],
             };
@@ -588,7 +592,7 @@ class RaindropMCPServer {
               content: [
                 {
                   type: "text",
-                  text: `✓ Collection created successfully!\n\n${JSON.stringify(
+                  text: `Collection created successfully!\n\n${JSON.stringify(
                     data,
                     null,
                     2
@@ -616,7 +620,7 @@ class RaindropMCPServer {
               content: [
                 {
                   type: "text",
-                  text: `✓ Collection updated successfully!\n\n${JSON.stringify(
+                  text: `Collection updated successfully!\n\n${JSON.stringify(
                     data,
                     null,
                     2
@@ -633,7 +637,7 @@ class RaindropMCPServer {
               content: [
                 {
                   type: "text",
-                  text: `✓ Collection ${id} deleted successfully`,
+                  text: `Collection ${id} deleted successfully`,
                 },
               ],
             };
@@ -670,7 +674,7 @@ class RaindropMCPServer {
               content: [
                 {
                   type: "text",
-                  text: `✓ Tags renamed to "${newTag}" successfully!\n\n${JSON.stringify(
+                  text: `Tags renamed to "${newTag}" successfully!\n\n${JSON.stringify(
                     data,
                     null,
                     2
@@ -692,7 +696,7 @@ class RaindropMCPServer {
               content: [
                 {
                   type: "text",
-                  text: `✓ Tags ${tags.join(", ")} deleted successfully`,
+                  text: `Tags ${tags.join(", ")} deleted successfully`,
                 },
               ],
             };
@@ -739,9 +743,49 @@ class RaindropMCPServer {
   }
 
   async start() {
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
-    console.error("Raindrop MCP Server running on stdio");
+    const app = express();
+    app.use(express.json());
+
+    const transports: Record<string, StreamableHTTPServerTransport> = {};
+
+    const isInitializeRequest = (body: any): boolean => {
+      return body?.method === "initialize";
+    };
+
+    app.all("/mcp", async (req: Request, res: Response) => {
+      const sessionId = req.headers["mcp-session-id"] as string | undefined;
+      let transport: StreamableHTTPServerTransport;
+
+      if (sessionId && transports[sessionId]) {
+        transport = transports[sessionId];
+      } else if (!sessionId && isInitializeRequest(req.body)) {
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (newSessionId: string) => {
+            transports[newSessionId] = transport;
+            console.log(`Session initialized: ${newSessionId}`);
+          },
+        });
+        const server = this.createServer();
+        await server.connect(transport);
+      } else {
+        res.status(400).json({ error: "Invalid request" });
+        return;
+      }
+
+      await transport.handleRequest(req, res);
+    });
+
+    app.get("/health", (_req: Request, res: Response) => {
+      res.json({ status: "ok" });
+    });
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Raindrop MCP Server running on http://0.0.0.0:${PORT}`);
+      console.log(`MCP endpoint: http://0.0.0.0:${PORT}/mcp`);
+      console.log(`Health check: http://0.0.0.0:${PORT}/health`);
+    });
   }
 }
 

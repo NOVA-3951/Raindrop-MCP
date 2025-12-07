@@ -2,7 +2,7 @@ build:
   dockerBuildPath: .
 
 startCommand:
-  type: stdio
+  type: http
   configSchema:
     type: object
     required:

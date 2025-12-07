@@ -24,3 +24,6 @@ args = "npm run build"
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[nix]
+channel = "stable-25_05"
