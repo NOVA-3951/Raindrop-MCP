@@ -47,7 +47,7 @@ class RaindropMCPServer {
       Authorization: `Bearer ${this.apiToken}`,
     };
 
-    if (body && (method === "POST" || method === "PUT")) {
+    if (body) {
       headers["Content-Type"] = "application/json";
     }
 
