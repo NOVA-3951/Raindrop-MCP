@@ -1,0 +1,100 @@
+[12:38:32 AM] Starting deployment...
+[12:38:33 AM] Fetching commit information...
+[12:38:33 AM] Commit: 64411f3
+[12:38:33 AM] Creating GitHub deployment...
+[12:38:34 AM] GitHub deployment initialized
+[12:38:34 AM] Cloning repository...
+[12:38:34 AM] Validating files...
+[12:38:34 AM] Deploy failed: Failed to validate smithery.yaml configuration. Check your smithery.yaml configuration schema. See the documentation for correct format.
+  Cause: {
+  "zodError": {
+    "name": "ZodError",
+    "issues": [
+      {
+        "code": "invalid_union",
+        "path": [],
+        "message": "Invalid input",
+        "unionErrors": [
+          {
+            "name": "ZodError",
+            "issues": [
+              {
+                "code": "invalid_literal",
+                "path": [
+                  "runtime"
+                ],
+                "message": "Invalid literal value, expected \"typescript\"",
+                "expected": "typescript"
+              }
+            ]
+          },
+          {
+            "name": "ZodError",
+            "issues": [
+              {
+                "code": "invalid_literal",
+                "path": [
+                  "runtime"
+                ],
+                "message": "Invalid literal value, expected \"python\"",
+                "expected": "python"
+              }
+            ]
+          },
+          {
+            "name": "ZodError",
+            "issues": [
+              {
+                "code": "invalid_union",
+                "path": [
+                  "startCommand"
+                ],
+                "message": "Invalid input",
+                "unionErrors": [
+                  {
+                    "name": "ZodError",
+                    "issues": [
+                      {
+                        "code": "invalid_type",
+                        "path": [
+                          "startCommand"
+                        ],
+                        "message": "Required",
+                        "expected": "object",
+                        "received": "undefined"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "ZodError",
+                    "issues": [
+                      {
+                        "code": "invalid_type",
+                        "path": [
+                          "startCommand"
+                        ],
+                        "message": "Required",
+                        "expected": "object",
+                        "received": "undefined"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "code": "invalid_type",
+                "path": [
+                  "startCommand"
+                ],
+                "message": "Required",
+                "expected": "object",
+                "received": "undefined"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "errorType": "configParseError"
+}
