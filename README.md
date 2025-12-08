@@ -1,5 +1,7 @@
 # Raindrop.io MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@NOVA-3951/raindrop)](https://smithery.ai/server/@NOVA-3951/raindrop)
+
 A Model Context Protocol (MCP) server that provides AI agents with full read/write access to Raindrop.io bookmarks, collections, and tags.
 
 ## Features
